@@ -8,10 +8,12 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-/* =========================
-   EMAIL TRANSPORTER
-========================= */
+/* HOME ROUTE */
+app.get("/", (req, res) => {
+    res.send("SkillFair Backend is Running 🚀");
+});
 
+/* EMAIL TRANSPORTER */
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -20,24 +22,10 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-/* =========================
-   REGISTER API
-========================= */
-
+/* REGISTER API */
 app.post("/register", async (req, res) => {
-
     try {
-
-        const {
-            name,
-            email,
-            course,
-            sem,
-            project,
-            place
-        } = req.body;
-
-        /* EMAIL */
+        const { name, email, course, sem, project, place } = req.body;
 
         const mailOptions = {
             from: process.env.EMAIL_USER,
@@ -45,15 +33,11 @@ app.post("/register", async (req, res) => {
             subject: "Skill Fair Registration Successful",
             html: `
                 <h2>Registration Successful</h2>
-
                 <p><b>Name:</b> ${name}</p>
                 <p><b>Course:</b> ${course}</p>
                 <p><b>Semester:</b> ${sem}</p>
                 <p><b>Project:</b> ${project}</p>
                 <p><b>Place:</b> ${place}</p>
-
-                <br>
-
                 <h3>Thank You For Participating!</h3>
             `
         };
@@ -66,9 +50,7 @@ app.post("/register", async (req, res) => {
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: "Server Error"
@@ -76,10 +58,7 @@ app.post("/register", async (req, res) => {
     }
 });
 
-/* =========================
-   SERVER
-========================= */
-
+/* SERVER */
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
