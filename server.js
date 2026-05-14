@@ -1,99 +1,87 @@
-const form = document.getElementById("studentForm");
-const message = document.getElementById("message");
-const submitBtn = document.getElementById("submitBtn");
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const nodemailer = require("nodemailer");
+
+const app = express();
+
+app.use(cors());
+app.use(bodyParser.json());
 
 /* =========================
-   FORM SUBMIT
+   EMAIL TRANSPORTER
 ========================= */
 
-form.addEventListener("submit", async (e) => {
-
-    e.preventDefault();
-
-    /* BUTTON LOADING */
-
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = "Submitting...";
-
-    message.className = "loading";
-    message.innerHTML = "Please wait... Generating certificate...";
-
-    /* FORM DATA */
-
-    const studentData = {
-        name: document.getElementById("name").value.trim(),
-        email: document.getElementById("email").value.trim(),
-        course: document.getElementById("course").value,
-        sem: document.getElementById("sem").value,
-        project: document.getElementById("project").value.trim(),
-        place: document.getElementById("place").value.trim()
-    };
-
-    /* VALIDATION */
-
-    if (
-        !studentData.name ||
-        !studentData.email ||
-        !studentData.course ||
-        !studentData.sem ||
-        !studentData.project ||
-        !studentData.place
-    ) {
-
-        message.className = "error";
-        message.innerHTML = "Please fill all fields";
-
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = "Submit Registration";
-
-        return;
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
+});
+
+/* =========================
+   REGISTER API
+========================= */
+
+app.post("/register", async (req, res) => {
 
     try {
 
-        /* API REQUEST */
+        const {
+            name,
+            email,
+            course,
+            sem,
+            project,
+            place
+        } = req.body;
 
-        const response = await fetch(
-            "https://skillfair.onrender.com/register",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(studentData)
-            }
-        );
+        /* EMAIL */
 
-        /* RESPONSE */
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "Skill Fair Registration Successful",
+            html: `
+                <h2>Registration Successful</h2>
 
-        const result = await response.json();
+                <p><b>Name:</b> ${name}</p>
+                <p><b>Course:</b> ${course}</p>
+                <p><b>Semester:</b> ${sem}</p>
+                <p><b>Project:</b> ${project}</p>
+                <p><b>Place:</b> ${place}</p>
 
-        if (response.ok && result.success) {
+                <br>
 
-            message.className = "success";
-            message.innerHTML =
-                "Registration Successful! Certificate Sent To Email.";
+                <h3>Thank You For Participating!</h3>
+            `
+        };
 
-            form.reset();
+        await transporter.sendMail(mailOptions);
 
-        } else {
-
-            message.className = "error";
-            message.innerHTML =
-                result.message || "Registration Failed";
-        }
+        res.json({
+            success: true,
+            message: "Registration Successful"
+        });
 
     } catch (error) {
 
-        console.error(error);
+        console.log(error);
 
-        message.className = "error";
-        message.innerHTML =
-            "Server Error! Please try again later.";
+        res.status(500).json({
+            success: false,
+            message: "Server Error"
+        });
     }
+});
 
-    /* BUTTON RESET */
+/* =========================
+   SERVER
+========================= */
 
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = "Submit Registration";
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
