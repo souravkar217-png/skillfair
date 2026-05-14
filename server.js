@@ -16,7 +16,7 @@ form.addEventListener("submit", async (e) => {
     submitBtn.innerHTML = "Submitting...";
 
     message.className = "loading";
-    message.innerHTML = "Please wait... Generating certificate";
+    message.innerHTML = "Please wait... Generating certificate...";
 
     /* FORM DATA */
 
@@ -72,7 +72,7 @@ form.addEventListener("submit", async (e) => {
 
             message.className = "success";
             message.innerHTML =
-                "Registration Successful + Certificate Sent To Email!";
+                "Registration Successful! Certificate Sent To Email.";
 
             form.reset();
 
@@ -85,7 +85,7 @@ form.addEventListener("submit", async (e) => {
 
     } catch (error) {
 
-        console.log(error);
+        console.error(error);
 
         message.className = "error";
         message.innerHTML =
