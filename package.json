@@ -1,10 +1,9 @@
 {
-  "name": "project",
+  "name": "skillfair",
   "version": "1.0.0",
-  "description": "",
+  "description": "Skill Fair Registration Backend",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
   "keywords": [],
@@ -12,12 +11,12 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "body-parser": "^2.2.2",
-    "cors": "^2.8.6",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
     "exceljs": "^4.4.0",
-    "express": "^5.2.1",
-    "nodemailer": "^8.0.7",
-    "pdfkit": "^0.18.0",
-    "puppeteer": "^24.43.1"
+    "express": "^4.18.2",
+    "nodemailer": "^6.9.8",
+    "pdfkit": "^0.15.0",
+    "puppeteer": "^22.15.0"
   }
 }
