@@ -5,235 +5,134 @@ const nodemailer = require("nodemailer");
 const excelJS = require("exceljs");
 const puppeteer = require("puppeteer");
 const fs = require("fs");
-const path = require("path");
 
 const app = express();
 
-/* =========================
-   MIDDLEWARE
-========================= */
-
+// =========================
+// MIDDLEWARE
+// =========================
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
-/* =========================
-   EXCEL SETUP
-========================= */
-
+// =========================
+// EXCEL SETUP
+// =========================
 const workbook = new excelJS.Workbook();
 const worksheet = workbook.addWorksheet("Skill Fair Students");
 
 worksheet.columns = [
-  { header: "Student Name", key: "name", width: 30 },
-  { header: "Email", key: "email", width: 35 },
-  { header: "Course", key: "course", width: 25 },
-  { header: "Semester", key: "sem", width: 20 },
-  { header: "Project", key: "project", width: 35 },
-  { header: "Place", key: "place", width: 30 },
+    { header: "Student Name", key: "name", width: 30 },
+    { header: "Email", key: "email", width: 35 },
+    { header: "Course", key: "course", width: 20 },
+    { header: "Sem / Year", key: "sem", width: 20 },
+    { header: "Project", key: "project", width: 35 },
+    { header: "Place", key: "place", width: 30 }
 ];
 
-const EXCEL_FILE = "students.xlsx";
+// =========================
+// HOME
+// =========================
+app.get("/", (req, res) => {
+    res.send("Server Running...");
+});
 
-/* =========================
-   CERTIFICATE HTML
-========================= */
-
+// =========================
+// CERTIFICATE HTML GENERATOR
+// =========================
 function generateHTML(data) {
+    const { name, course, sem, project, place } = data;
 
-  const { name, course, sem, project, place } = data;
+    const date = new Date().toLocaleDateString();
 
-  const date = new Date().toLocaleDateString();
-
-  return `
+    return `
 <!DOCTYPE html>
 <html>
-
 <head>
-
 <meta charset="utf-8">
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
 
 <style>
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
 body{
-    width:100%;
-    height:100vh;
-    background:#f5f5f5;
-    font-family:'Poppins',sans-serif;
+    margin:0;
+    background:#eee;
 }
-
 .certificate{
-    width:1400px;
-    height:900px;
-    background:white;
+    width:1200px;
+    height:850px;
     margin:auto;
+    background:white;
     position:relative;
-    overflow:hidden;
-    border:20px solid #0f172a;
+    border:15px solid #0f2a5a;
+    box-shadow:0 0 40px rgba(0,0,0,0.2);
+    padding:50px;
 }
 
-/* TOP HEADER */
-
-.top{
-    height:180px;
-    background:#0f172a;
-    color:white;
+.header{
     text-align:center;
-    padding-top:30px;
+    font-family:Poppins;
 }
 
-.top h1{
-    font-size:42px;
-    letter-spacing:2px;
+.header h1{
+    margin:0;
+    font-size:40px;
+    color:#0f2a5a;
 }
-
-.top h3{
-    margin-top:10px;
-    font-size:22px;
-    font-weight:400;
-}
-
-/* TITLE */
 
 .title{
     text-align:center;
-    margin-top:50px;
-}
-
-.title h2{
-    font-size:80px;
-    color:#0f172a;
+    font-size:70px;
+    color:#0f2a5a;
+    margin-top:30px;
     font-weight:700;
-    letter-spacing:5px;
 }
 
-.title p{
-    font-size:28px;
-    color:#555;
+.sub{
+    text-align:center;
+    font-size:20px;
     margin-top:10px;
 }
 
-/* CONTENT */
-
-.content{
-    text-align:center;
-    margin-top:60px;
-    padding:0 100px;
-}
-
-.present{
-    font-size:32px;
-    color:#444;
-}
-
 .name{
-    margin:35px 0;
-    font-size:85px;
+    text-align:center;
+    font-size:60px;
     color:#dc2626;
-    font-weight:700;
-    border-bottom:4px solid #0f172a;
-    display:inline-block;
-    padding:10px 50px;
+    font-family:"Great Vibes";
+    margin-top:40px;
 }
-
-.desc{
-    font-size:32px;
-    line-height:1.8;
-    color:#333;
-}
-
-.course{
-    color:#2563eb;
-    font-weight:700;
-}
-
-/* DETAILS BOX */
 
 .details{
-    width:75%;
-    margin:50px auto 0;
-    border:3px solid #d1d5db;
-    border-radius:15px;
-    padding:35px;
-    text-align:left;
-    background:#fafafa;
+    margin-top:40px;
+    text-align:center;
+    font-size:20px;
 }
 
-.details p{
-    font-size:24px;
-    margin-bottom:18px;
-    color:#111827;
+.box{
+    width:70%;
+    margin:30px auto;
+    padding:20px;
+    border:2px solid #ccc;
+    border-radius:10px;
 }
-
-.details b{
-    color:#0f172a;
-}
-
-/* FOOTER */
 
 .footer{
     position:absolute;
-    bottom:50px;
-    left:0;
+    bottom:60px;
     width:100%;
-    display:flex;
-    justify-content:space-around;
-    align-items:center;
-}
-
-.sign{
     text-align:center;
-}
-
-.line{
-    width:260px;
-    border-top:3px solid #000;
-    margin-bottom:12px;
-}
-
-.sign p{
-    font-size:20px;
-    font-weight:600;
 }
 
 .date{
     position:absolute;
+    bottom:30px;
     left:60px;
-    bottom:60px;
-    font-size:18px;
-    font-weight:500;
 }
 
-.achievement{
+.signature{
     position:absolute;
-    bottom:15px;
-    width:100%;
-    text-align:center;
-    font-size:24px;
-    color:#1e3a8a;
-    font-weight:700;
+    bottom:30px;
+    right:60px;
 }
-
-/* GOLD SEAL */
-
-.seal{
-    position:absolute;
-    right:70px;
-    bottom:120px;
-    width:160px;
-    height:160px;
-    border-radius:50%;
-    border:12px solid gold;
-}
-
 </style>
 
 </head>
@@ -242,237 +141,122 @@ body{
 
 <div class="certificate">
 
-    <div class="top">
-        <h1>THE GEORGE TELEGRAPH TRAINING INSTITUTE</h1>
-        <h3>MIDNAPORE CENTRE</h3>
+    <div class="header">
+        <h1>GEORGE TELEGRAPH</h1>
+        <p>Skill Fair & Computer Application Department</p>
     </div>
 
-    <div class="title">
-        <h2>CERTIFICATE</h2>
-        <p>OF PARTICIPATION</p>
-    </div>
+    <div class="title">CERTIFICATE</div>
+    <div class="sub">OF PARTICIPATION</div>
 
-    <div class="content">
+    <div class="details">This is to certify that</div>
 
-        <div class="present">
-            This is to certify that
-        </div>
-
-        <div class="name">
-            ${name}
-        </div>
-
-        <div class="desc">
-            has successfully participated in
-            <span class="course">
-            Skill Fair Project Presentation
-            </span>
-        </div>
-
-    </div>
+    <div class="name">${name}</div>
 
     <div class="details">
-
-        <p><b>Course:</b> ${course}</p>
-
-        <p><b>Semester:</b> ${sem}</p>
-
-        <p><b>Project:</b> ${project}</p>
-
-        <p><b>Place:</b> ${place}</p>
-
+        has successfully participated in Skill Fair Project Presentation
     </div>
 
-    <div class="date">
-        Date: ${date}
+    <div class="box">
+        <p><b>Course:</b> ${course}</p>
+        <p><b>Project:</b> ${project}</p>
+        <p><b>Semester:</b> ${sem}</p>
+        <p><b>Place:</b> ${place}</p>
     </div>
 
     <div class="footer">
-
-        <div class="sign">
-            <div class="line"></div>
-            <p>Coordinator</p>
-        </div>
-
-        <div class="sign">
-            <div class="line"></div>
-            <p>Director</p>
-        </div>
-
+        <h3>Congratulations on Your Achievement!</h3>
     </div>
 
-    <div class="seal"></div>
-
-    <div class="achievement">
-        Congratulations on Your Achievement!
-    </div>
+    <div class="date">Date: ${date}</div>
+    <div class="signature">Director Signature</div>
 
 </div>
 
 </body>
 </html>
-`;
+    `;
 }
 
-/* =========================
-   REGISTER API
-========================= */
-
+// =========================
+// REGISTER ROUTE
+// =========================
 app.post("/register", async (req, res) => {
 
-  try {
+    try {
+        const { name, email, course, sem, project, place } = req.body;
 
-    const {
-      name,
-      email,
-      course,
-      sem,
-      project,
-      place
-    } = req.body;
-
-    /* VALIDATION */
-
-    if (
-      !name ||
-      !email ||
-      !course ||
-      !sem ||
-      !project ||
-      !place
-    ) {
-
-      return res.status(400).json({
-        success: false,
-        message: "All Fields Required"
-      });
-
-    }
-
-    /* SAVE TO EXCEL */
-
-    worksheet.addRow({
-      name,
-      email,
-      course,
-      sem,
-      project,
-      place
-    });
-
-    await workbook.xlsx.writeFile(EXCEL_FILE);
-
-    /* GENERATE PDF */
-
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox"
-      ]
-    });
-
-    const page = await browser.newPage();
-
-    const html = generateHTML({
-      name,
-      course,
-      sem,
-      project,
-      place
-    });
-
-    await page.setViewport({
-      width: 1400,
-      height: 900,
-      deviceScaleFactor: 2
-    });
-
-    await page.setContent(html, {
-      waitUntil: "networkidle0"
-    });
-
-    const pdfName = `${name}_certificate.pdf`;
-
-    const pdfPath = path.join(__dirname, pdfName);
-
-    await page.pdf({
-      path: pdfPath,
-      format: "A4",
-      landscape: true,
-      printBackground: true,
-      preferCSSPageSize: true
-    });
-
-    await browser.close();
-
-    /* EMAIL TRANSPORTER */
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASS
-      }
-    });
-
-    /* SEND EMAIL */
-
-    await transporter.sendMail({
-      from: process.env.EMAIL,
-      to: email,
-      subject: "Skill Fair Certificate",
-      text: "Congratulations! Your certificate is attached.",
-      attachments: [
-        {
-          filename: pdfName,
-          path: pdfPath
+        if (!name || !email || !course || !sem || !project || !place) {
+            return res.status(400).send("All Fields Required");
         }
-      ]
-    });
 
-    /* DELETE PDF AFTER SEND */
+        // =========================
+        // SAVE TO EXCEL
+        // =========================
+        worksheet.addRow({ name, email, course, sem, project, place });
+        await workbook.xlsx.writeFile("students.xlsx");
 
-    fs.unlinkSync(pdfPath);
+        console.log("Excel Saved");
 
-    /* SUCCESS RESPONSE */
+        // =========================
+        // PDF GENERATION USING PUPPETEER
+        // =========================
+        const browser = await puppeteer.launch({
+            headless: "new"
+        });
 
-    res.status(200).json({
-      success: true,
-      message: "Registration Successful + Certificate Sent!"
-    });
+        const page = await browser.newPage();
 
-  } catch (err) {
+        const html = generateHTML({ name, course, sem, project, place });
 
-    console.log(err);
+        await page.setContent(html, { waitUntil: "networkidle0" });
 
-    res.status(500).json({
-      success: false,
-      message: "Server Error"
-    });
+        const pdfName = `${name}_certificate.pdf`;
 
-  }
+        await page.pdf({
+            path: pdfName,
+            format: "A4",
+            landscape: true,
+            printBackground: true
+        });
 
+        await browser.close();
+
+        // =========================
+        // EMAIL SEND
+        // =========================
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: "YOUR_GMAIL@gmail.com",
+                pass: "YOUR_APP_PASSWORD"
+            }
+        });
+
+        await transporter.sendMail({
+            from: "YOUR_GMAIL@gmail.com",
+            to: email,
+            subject: "Skill Fair Certificate",
+            text: "Your certificate is attached.",
+            attachments: [
+                {
+                    filename: pdfName,
+                    path: "./" + pdfName
+                }
+            ]
+        });
+
+        res.send("Registration Successful + Certificate Sent!");
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Server Error");
+    }
 });
 
-/* =========================
-   HOME ROUTE
-========================= */
-
-app.get("/", (req, res) => {
-
-  res.send("Skill Fair Backend Running Successfully");
-
-});
-
-/* =========================
-   SERVER
-========================= */
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-
-  console.log("Server running on port", PORT);
-
+// =========================
+// START SERVER
+// =========================
+app.listen(3000, () => {
+    console.log("Server running on port 3000");
 });
